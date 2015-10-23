@@ -3,7 +3,6 @@ python:
   - "2.7"
   - "3.3"
   - "3.4"
-  - "3.5"
 env:
   - DJANGO_VERSION=1.6.11
   - DJANGO_VERSION=1.7.10
@@ -13,6 +12,6 @@ install:
   - pip install -e .
   - pip install -r .travis-requirements.txt
 script:
-  coverage run --source=tiny_rest testapp/manage.py test
+  coverage run --source=tiny_rest testproject/manage.py test
 after_success:
   coveralls

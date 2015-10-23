@@ -11,13 +11,14 @@ class BasicAuthMixin(object):
     def authenticate(self, request):
         request.user = AnonymousUser()
 
-        if 'HTTP_AUTHORIZATION' in request.META:
-            auth = request.META['HTTP_AUTHORIZATION'].split()
+        auth = request.META.get('HTTP_AUTHORIZATION')
+        if auth:
+            auth = auth.split()
 
             if len(auth) == 2:
                 if auth[0].lower() == 'basic':
-                    username, password = base64.b64decode(auth[1]).split(':')
-                    user = authenticate(username=username, password=password)
+                    u, p = base64.b64decode(auth[1]).decode().split(':')
+                    user = authenticate(username=u, password=p)
                     if user:
                         if user.is_active:
                             request.user = user

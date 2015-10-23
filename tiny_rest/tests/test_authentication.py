@@ -55,7 +55,7 @@ class TestSessionAPIView(BaseTestCase):
         request = self.factory.get('/')
         request.user = authenticate(username='user', password='123456')
         response = SessionAPIView.as_view()(request)
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode())
         self.assertTrue(data['is_authenticated'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -63,7 +63,7 @@ class TestSessionAPIView(BaseTestCase):
         self.user.save()
         request.user = authenticate(username='user', password='123456')
         response = SessionAPIView.as_view()(request)
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode())
         self.assertFalse(data['is_authenticated'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -75,30 +75,30 @@ class TestBasicAuthAPIView(BaseTestCase):
 
         basic_auth = '{0}:{1}'.format('user', '123456')
         request.META['HTTP_AUTHORIZATION'] = 'Basic {0}'.format(
-            base64.b64encode(basic_auth)
+            base64.b64encode(basic_auth.encode()).decode()
         )
         response = BasicAuthAPIView.as_view()(request)
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode())
         self.assertTrue(data['is_authenticated'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         basic_auth = '{0}:{1}'.format('user', '1234567')
         request.META['HTTP_AUTHORIZATION'] = 'Basic {0}'.format(
-            base64.b64encode(basic_auth)
+            base64.b64encode(basic_auth.encode()).decode()
         )
         response = BasicAuthAPIView.as_view()(request)
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode())
         self.assertFalse(data['is_authenticated'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         basic_auth = '{0}:{1}'.format('user', '123456')
         request.META['HTTP_AUTHORIZATION'] = 'Basic {0}'.format(
-            base64.b64encode(basic_auth)
+            base64.b64encode(basic_auth.encode()).decode()
         )
         self.user.is_active = False
         self.user.save()
         response = BasicAuthAPIView.as_view()(request)
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode())
         self.assertFalse(data['is_authenticated'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -111,13 +111,13 @@ class TestTokenAuthAPIView(BaseTestCase):
 
         request.META['HTTP_AUTHORIZATION'] = 'Token {0}'.format(token.key)
         response = TokenAuthAPIView.as_view()(request)
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode())
         self.assertTrue(data['is_authenticated'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         request.META['HTTP_AUTHORIZATION'] = 'Token {0}'.format('invalid-key')
         response = TokenAuthAPIView.as_view()(request)
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode())
         self.assertFalse(data['is_authenticated'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -125,6 +125,6 @@ class TestTokenAuthAPIView(BaseTestCase):
         self.user.save()
         request.META['HTTP_AUTHORIZATION'] = 'Token {0}'.format(token.key)
         response = TokenAuthAPIView.as_view()(request)
-        data = json.loads(response.content)
+        data = json.loads(response.content.decode())
         self.assertFalse(data['is_authenticated'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
