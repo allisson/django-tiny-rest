@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from django.forms.models import model_to_dict
 
 from tiny_rest.views import APIView
 from tiny_rest.authorization import IsAuthenticatedOrReadOnlyMixin
@@ -10,6 +11,8 @@ from blog.forms import PostForm
 
 
 class PostAPIView(IsAuthenticatedOrReadOnlyMixin, APIView):
+
+    paginate_by = 10
 
     def get_post(self):
         try:
@@ -35,9 +38,11 @@ class PostAPIView(IsAuthenticatedOrReadOnlyMixin, APIView):
         return self.response(data=post_to_dict(request, post))
 
     def create(self, request, *args, **kwargs):
-        form = PostForm(data=request.POST)
+        form = PostForm(data=request.POST, files=request.FILES)
         if form.is_valid():
-            post = form.save()
+            post = form.save(commit=False)
+            post.user = request.user
+            post.save()
             return self.response(
                 data=post_to_dict(request, post),
                 status_code=status.HTTP_201_CREATED
@@ -48,8 +53,53 @@ class PostAPIView(IsAuthenticatedOrReadOnlyMixin, APIView):
                 status_code=status.HTTP_400_BAD_REQUEST
             )
 
+    def update(self, request, *args, **kwargs):
+        post = self.get_post()
+        if not post:
+            return self.resource_not_found()
+
+        form = PostForm(data=request.PUT, files=request.FILES, instance=post)
+        if form.is_valid():
+            post = form.save()
+            return self.response(
+                data=post_to_dict(request, post),
+                status_code=status.HTTP_200_OK
+            )
+        else:
+            return self.response(
+                data={'error': form.errors},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+    def partial_update(self, request, *args, **kwargs):
+        post = self.get_post()
+        if not post:
+            return self.resource_not_found()
+
+        data = model_to_dict(post)
+        data.update(request.PATCH.dict())
+        form = PostForm(data=data, files=request.FILES, instance=post)
+        if form.is_valid():
+            post = form.save()
+            return self.response(
+                data=post_to_dict(request, post),
+                status_code=status.HTTP_200_OK
+            )
+        else:
+            return self.response(
+                data={'error': form.errors},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+    def destroy(self, request, *args, **kwargs):
+        post = self.get_post()
+        post.delete()
+        return self.response(data={}, status_code=status.HTTP_204_NO_CONTENT)
+
 
 class CommentAPIView(IsAuthenticatedOrReadOnlyMixin, APIView):
+
+    paginate_by = 10
 
     def load_post(self):
         try:

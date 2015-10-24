@@ -58,3 +58,5 @@ target/
 
 # Sqlite3
 *.sqlite3
+
+post_images/

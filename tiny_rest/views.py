@@ -34,13 +34,16 @@ class APIView(View):
         return super(APIView, self).dispatch(request, *args, **kwargs)
 
     def patch_request_method(self, request):
-        # if request.method != 'POST' and request.method != 'GET':
-        if request.method not in SAFE_METHODS + ('POST', ):
-            method = request.method
+        if request.method == 'PUT':
             request.method = 'POST'
             request._load_post_and_files()
-            request.method = method
-            setattr(request, method, request.POST)
+            request.method = 'PUT'
+            request.PUT = request.POST
+        elif request.method == 'PATCH':
+            request.method = 'POST'
+            request._load_post_and_files()
+            request.method = 'PATCH'
+            request.PATCH = request.POST
 
     def authenticate(self, request):
         if request.user.is_authenticated() and not request.user.is_active:

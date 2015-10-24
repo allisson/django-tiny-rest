@@ -12,6 +12,6 @@ install:
   - pip install -e .
   - pip install -r .travis-requirements.txt
 script:
-  coverage run --source=tiny_rest testproject/manage.py test
+  coverage run --source=tiny_rest testproject/manage.py test tiny_rest blog
 after_success:
   coveralls

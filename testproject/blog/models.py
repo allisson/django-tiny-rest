@@ -41,6 +41,12 @@ class Post(CreateUpdateModel):
         unique=True
     )
 
+    image = models.ImageField(
+        _('image'),
+        max_length=255,
+        upload_to='post_images/%Y/%m/%d'
+    )
+
     body = models.TextField(
         _('body')
     )
