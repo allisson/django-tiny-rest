@@ -7,7 +7,7 @@ from tiny_rest.authorization import IsAuthenticatedOrReadOnlyMixin
 import status
 
 from blog.models import Post, Comment, post_to_dict, comment_to_dict
-from blog.forms import PostForm
+from blog.forms import PostForm, CommentForm
 
 
 class PostAPIView(IsAuthenticatedOrReadOnlyMixin, APIView):
@@ -93,6 +93,9 @@ class PostAPIView(IsAuthenticatedOrReadOnlyMixin, APIView):
 
     def destroy(self, request, *args, **kwargs):
         post = self.get_post()
+        if not post:
+            return self.resource_not_found()
+
         post.delete()
         return self.response(data={}, status_code=status.HTTP_204_NO_CONTENT)
 
@@ -140,6 +143,87 @@ class CommentAPIView(IsAuthenticatedOrReadOnlyMixin, APIView):
             return self.resource_not_found()
 
         return self.response(data=comment_to_dict(request, comment))
+
+    def create(self, request, *args, **kwargs):
+        post = self.load_post()
+        if not post:
+            return self.resource_not_found()
+
+        form = CommentForm(data=request.POST, files=request.FILES)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.post = post
+            comment.user = request.user
+            comment.save()
+            return self.response(
+                data=comment_to_dict(request, comment),
+                status_code=status.HTTP_201_CREATED
+            )
+        else:
+            return self.response(
+                data={'error': form.errors},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+    def update(self, request, *args, **kwargs):
+        post = self.load_post()
+        if not post:
+            return self.resource_not_found()
+
+        comment = self.get_comment(post)
+        if not comment:
+            return self.resource_not_found()
+
+        form = CommentForm(
+            data=request.PUT, files=request.FILES, instance=comment
+        )
+        if form.is_valid():
+            comment = form.save()
+            return self.response(
+                data=comment_to_dict(request, comment),
+                status_code=status.HTTP_200_OK
+            )
+        else:
+            return self.response(
+                data={'error': form.errors},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+    def partial_update(self, request, *args, **kwargs):
+        post = self.load_post()
+        if not post:
+            return self.resource_not_found()
+
+        comment = self.get_comment(post)
+        if not comment:
+            return self.resource_not_found()
+
+        data = model_to_dict(comment)
+        data.update(request.PATCH.dict())
+        form = CommentForm(data=data, files=request.FILES, instance=comment)
+        if form.is_valid():
+            comment = form.save()
+            return self.response(
+                data=comment_to_dict(request, comment),
+                status_code=status.HTTP_200_OK
+            )
+        else:
+            return self.response(
+                data={'error': form.errors},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+    def destroy(self, request, *args, **kwargs):
+        post = self.load_post()
+        if not post:
+            return self.resource_not_found()
+
+        comment = self.get_comment(post)
+        if not comment:
+            return self.resource_not_found()
+
+        comment.delete()
+        return self.response(data={}, status_code=status.HTTP_204_NO_CONTENT)
 
 
 # cbv -> fbv

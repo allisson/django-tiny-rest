@@ -11,7 +11,6 @@ from qurl import qurl
 import status
 
 from tiny_rest.http import JsonResponse
-from tiny_rest.constants import SAFE_METHODS
 
 
 class APIView(View):
