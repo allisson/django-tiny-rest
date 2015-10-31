@@ -4,15 +4,14 @@ from django.forms.models import model_to_dict
 
 from tiny_rest.views import APIView
 from tiny_rest.authorization import IsAuthenticatedOrReadOnlyMixin
+from tiny_rest.pagination import PaginationMixin
 import status
 
 from blog.models import Post, Comment, post_to_dict, comment_to_dict
 from blog.forms import PostForm, CommentForm
 
 
-class PostAPIView(IsAuthenticatedOrReadOnlyMixin, APIView):
-
-    paginate_by = 10
+class PostAPIView(IsAuthenticatedOrReadOnlyMixin, PaginationMixin, APIView):
 
     def get_post(self):
         try:
@@ -100,7 +99,7 @@ class PostAPIView(IsAuthenticatedOrReadOnlyMixin, APIView):
         return self.response(data={}, status_code=status.HTTP_204_NO_CONTENT)
 
 
-class CommentAPIView(IsAuthenticatedOrReadOnlyMixin, APIView):
+class CommentAPIView(IsAuthenticatedOrReadOnlyMixin, PaginationMixin, APIView):
 
     paginate_by = 10
 
