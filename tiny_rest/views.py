@@ -92,7 +92,7 @@ class APIView(View):
     def destroy(self, request, *args, **kwargs):
         return self.method_not_allowed()
 
-    def response(self, data={}, status_code=200):
+    def response(self, data={}, safe=True, status_code=200):
         return JsonResponse(data=data, status=status_code)
 
     def not_authorized(self):
